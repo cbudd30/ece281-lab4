@@ -69,7 +69,7 @@ architecture test_bench of elevator_controller_fsm_tb is
 	signal w_floor : std_logic_vector(3 downto 0) := (others => '0');
   
 	-- 50 MHz clock
-	constant k_clk_period : time := 20 ns;
+	constant k_clk_period : time := 2000 ns;
 	
 begin
 	-- PORT MAPS ----------------------------------------
