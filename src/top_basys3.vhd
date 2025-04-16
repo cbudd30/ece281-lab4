@@ -30,6 +30,12 @@ architecture top_basys3_arch of top_basys3 is
     signal w_fsmreset : std_logic := btnR or btnU;
     signal w_clkreset : std_logic := btnL or btnU;
     
+    
+    signal w_clk2 : std_logic;
+    signal w_floor2 : STD_LOGIC_VECTOR (3 downto 0);
+    signal w_TMD4_o : STD_LOGIC_VECTOR (3 downto 0);
+    signal w_sel : STD_LOGIC_VECTOR (3 downto 0);
+    
 	-- component declarations
     component sevenseg_decoder is
         port (
@@ -37,6 +43,7 @@ architecture top_basys3_arch of top_basys3 is
             o_seg_n : out STD_LOGIC_VECTOR (6 downto 0)
         );
     end component sevenseg_decoder;
+    
     
     component elevator_controller_fsm is
 		Port (
@@ -47,6 +54,7 @@ architecture top_basys3_arch of top_basys3 is
             o_floor : out STD_LOGIC_VECTOR (3 downto 0)		   
 		 );
 	end component elevator_controller_fsm;
+	
 	
 	component TDM4 is
 		generic ( constant k_WIDTH : natural  := 4); -- bits in input and output
@@ -70,12 +78,13 @@ architecture top_basys3_arch of top_basys3 is
                 o_clk    : out std_logic		   -- divided (slow) clock
         );
     end component clock_divider;
-	
+    
+  
 begin
 	-- PORT MAPS ----------------------------------------
 	sevenseg_decoder1: sevenseg_decoder
 	   port map(
-	       i_Hex => w_floor,
+	       i_Hex => w_TMD4_o,
 	       o_seg_n => seg
 	       );
 	
@@ -88,13 +97,50 @@ begin
             o_floor => w_floor
 	        );
 	 
-	 clock1 : clock_divider
+	 controller2 : elevator_controller_fsm
 	   port map(
-	            i_clk => clk,
-                i_reset => w_clkreset,		   -- asynchronous
-                o_clk => w_clk
+	        i_clk => w_clk,
+            i_reset => w_fsmreset,
+            is_stopped => sw(15),
+            go_up_down => sw(14),
+            o_floor => w_floor2
+	        );
+	 
+	 clock1 : clock_divider
+	 --k_div = 50000000
+         generic map (
+            k_DIV => 50000000
+        )
+	 
+	   port map(
+	        i_clk => clk,
+            i_reset => w_clkreset,		   -- asynchronous
+            o_clk => w_clk
+	        );
 	   
-	   );
+	clock2 : clock_divider
+	--k_div = 12500000
+	   generic map (
+            k_DIV => 12500000
+        )
+	   port map(
+	        i_clk => clk,
+            i_reset => w_clkreset,		   -- asynchronous
+            o_clk => w_clk2
+	        );
+	   
+	   TDM1 : TDM4
+        port map ( 
+           i_clk => w_clk2,
+           i_reset	=> btnU,
+           i_D3 => x"F",
+		   i_D2 => w_floor2,
+		   i_D1 => x"F",	
+		   i_D0 => w_floor,	
+		   o_data => w_TMD4_o,
+		   o_sel => w_sel
+	       );
+   
     	
 	
 	-- CONCURRENT STATEMENTS ----------------------------
@@ -104,10 +150,15 @@ begin
     led(14 downto 0) <= (others => '0');
 	
 	-- leave unused switches UNCONNECTED. Ignore any warnings this causes.
-	an(0)   <= '0';
-    an(1)   <= '1';
-    an(2)   <= '1';
-    an(3)   <= '1';
+--	an(0)   <= '0';
+--    an(1)   <= '0';
+--    an(2)   <= '0';
+--    an(3)   <= '0';
+        an(0) <= w_sel(0);
+        an(1) <= w_sel(1);
+        an(2) <= w_sel(2);
+        an(3) <= w_sel(3);
+    
 	
 	-- reset signals
 	
