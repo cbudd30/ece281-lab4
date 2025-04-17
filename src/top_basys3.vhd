@@ -154,10 +154,14 @@ begin
 --    an(1)   <= '0';
 --    an(2)   <= '0';
 --    an(3)   <= '0';
-        an(0) <= w_sel(0);
-        an(1) <= w_sel(1);
-        an(2) <= w_sel(2);
-        an(3) <= w_sel(3);
+        an(0) <= '0' when w_sel(0) = '0' else
+                 '1';
+        an(1) <= '0' when w_sel(1) = '0' else
+                 '1';
+        an(2) <= '0' when w_sel(2) = '0' else
+                 '1';
+        an(3) <= '0' when w_sel(3) = '0' else
+                 '1';
     
 	
 	-- reset signals
