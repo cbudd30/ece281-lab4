@@ -121,7 +121,7 @@ begin
 	clock2 : clock_divider
 	--k_div = 12500000
 	   generic map (
-            k_DIV => 12500000
+            k_DIV =>  12500
         )
 	   port map(
 	        i_clk => clk,
